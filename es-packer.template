@@ -1,0 +1,34 @@
+"provisioners": [
+        {
+        "type": "shell",
+        "inline": ["sudo apt-add-repository -y ppa:ansible/ansible",
+                "sudo apt-get update",
+                "sudo apt-get install -y ansible=2.3.0.0-1ppa~xenial
+    git=1:2.7.4-0ubuntu1",
+                "mkdir /opt/go/src/deploy/roles",
+                "sudo git clone https://ec5aadd51474e7b4b75598bd660dc7067052e568@github.com/CiscoZeus/ansible-elasticsearch /opt/go/src/deploy/roles",
+                "cd /opt/go/src/deploy",
+                "
+                cat <<EOT >> /opt/go/src/deploy/inventory.yml
+                [local]
+                localhost ansible_connection=local
+                [elasticsearch-master:children]
+                local
+                EOT
+                ",
+                "
+                cat <<EOT >> /opt/go/src/deploy/playbook.yml
+                - hosts: elasticsearch-master
+                  roles:
+                    - role: elasticsearch
+                  sudo: yes
+                  vars:
+                      elasticsearch_node_master: "true"
+                      elasticsearch_node_data: "false"
+                      elasticsearch_discovery_zen_unicast: ""
+                EOT
+                ",
+                "sudo ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i inventory.yml playbook.yml"]
+        }
+    ]
+
